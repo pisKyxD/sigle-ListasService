@@ -33,8 +33,17 @@ public class ListaEsperaController {
     }
 
     @GetMapping("/paciente/{pacienteId}")
-    public ResponseEntity<List<ListaEspera>> getByPacienteId(@PathVariable Long pacienteId) {
-        return ResponseEntity.ok(listaService.getByPacienteId(pacienteId));
+    public ResponseEntity<List<ListaEsperaDTO>> getByPacienteId(@PathVariable Long pacienteId) {
+        return ResponseEntity.ok(listaService.getByPacienteId(pacienteId).stream()
+            .map(ListaEsperaDTO::from)
+            .toList());
+    }
+
+    @GetMapping("/paciente/email/{email}")
+    public ResponseEntity<List<ListaEsperaDTO>> getByPacienteEmail(@PathVariable String email) {
+        return ResponseEntity.ok(listaService.getByPacienteEmail(email).stream()
+            .map(ListaEsperaDTO::from)
+            .toList());
     }
 
     @PostMapping("/registrar")
