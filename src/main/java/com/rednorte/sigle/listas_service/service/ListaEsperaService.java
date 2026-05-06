@@ -32,8 +32,13 @@ public class ListaEsperaService {
         return listaRepository.findByPacienteId(pacienteId);
     }
 
+    public List<ListaEspera> getByPacienteEmail(String email) {
+        Paciente paciente = pacienteRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+        return listaRepository.findByPacienteId(paciente.getId());
+    }
+
     public ListaEspera registrarPacienteEnLista(Paciente paciente, String especialidad, String diagnostico, Boolean perteneceGes) {
-        // Guardar o actualizar paciente
         Paciente savedPaciente = pacienteRepository.findByRut(paciente.getRut())
                 .orElseGet(() -> pacienteRepository.save(paciente));
 
