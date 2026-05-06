@@ -31,6 +31,11 @@ public class PacienteController {
         return ResponseEntity.ok(service.getByRut(rut));
     }
 
+    @GetMapping("/email/{email}")
+    public ResponseEntity<Paciente> getByEmail(@PathVariable String email) {
+        return ResponseEntity.ok(service.getByEmail(email));
+    }
+
     @PostMapping
     public ResponseEntity<Paciente> create(@RequestBody Paciente p) {
         return ResponseEntity.ok(service.create(p));

@@ -26,6 +26,10 @@ public class PacienteService {
         return repository.findByRut(rut).orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
     }
 
+    public Paciente getByEmail(String email) {
+        return repository.findByEmail(email).orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+    }
+
     public Paciente create(Paciente p) {
         return repository.save(p);
     }
