@@ -44,9 +44,13 @@ public class ListaEsperaController {
 
     @GetMapping("/paciente/email/{email}")
     public ResponseEntity<List<ListaEsperaDTO>> getByPacienteEmail(@PathVariable String email) {
-        return ResponseEntity.ok(listaService.getByPacienteEmail(email).stream()
-            .map(ListaEsperaDTO::from)
-            .toList());
+        try {
+            return ResponseEntity.ok(listaService.getByPacienteEmail(email).stream()
+                .map(ListaEsperaDTO::from)
+                .toList());
+        } catch (RuntimeException e) {
+            return ResponseEntity.ok(List.of());
+        }
     }
 
     @PostMapping("/registrar")
