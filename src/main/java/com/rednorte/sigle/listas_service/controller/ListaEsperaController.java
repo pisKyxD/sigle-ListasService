@@ -6,6 +6,9 @@ import com.rednorte.sigle.listas_service.model.ListaEspera;
 import com.rednorte.sigle.listas_service.model.Paciente;
 import com.rednorte.sigle.listas_service.service.ListaEsperaService;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -47,7 +50,7 @@ public class ListaEsperaController {
     }
 
     @PostMapping("/registrar")
-    public ResponseEntity<ListaEspera> registrarPaciente(@RequestBody RegistroListaRequest request) {
+    public ResponseEntity<ListaEspera> registrarPaciente(@Valid @RequestBody RegistroListaRequest request) {
         ListaEspera nueva = listaService.registrarPacienteEnLista(
                 request.getPaciente(),
                 request.getEspecialidad(),
@@ -75,9 +78,16 @@ public class ListaEsperaController {
 
     @Data
     public static class RegistroListaRequest {
+        @NotNull(message = "El paciente es obligatorio")
+        @Valid
         private Paciente paciente;
+
+        @NotBlank(message = "La especialidad es obligatoria")
         private String especialidad;
+
+        @NotBlank(message = "El diagnóstico es obligatorio")
         private String diagnostico;
+
         private Boolean perteneceGes;
     }
 }
