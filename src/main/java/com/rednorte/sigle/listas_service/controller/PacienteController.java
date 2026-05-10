@@ -34,7 +34,11 @@ public class PacienteController {
 
     @GetMapping("/email/{email}")
     public ResponseEntity<Paciente> getByEmail(@PathVariable String email) {
-        return ResponseEntity.ok(service.getByEmail(email));
+        try {
+            return ResponseEntity.ok(service.getByEmail(email));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping
