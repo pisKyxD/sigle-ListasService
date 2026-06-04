@@ -26,8 +26,8 @@ public class ListaEsperaController {
     @GetMapping
     public ResponseEntity<List<ListaEsperaDTO>> getAll() {
         return ResponseEntity.ok(listaService.getAll().stream()
-            .map(ListaEsperaDTO::from)
-            .toList());
+                .map(ListaEsperaDTO::from)
+                .toList());
     }
 
     @GetMapping("/{id}")
@@ -38,16 +38,16 @@ public class ListaEsperaController {
     @GetMapping("/paciente/{pacienteId}")
     public ResponseEntity<List<ListaEsperaDTO>> getByPacienteId(@PathVariable Long pacienteId) {
         return ResponseEntity.ok(listaService.getByPacienteId(pacienteId).stream()
-            .map(ListaEsperaDTO::from)
-            .toList());
+                .map(ListaEsperaDTO::from)
+                .toList());
     }
 
     @GetMapping("/paciente/email/{email}")
     public ResponseEntity<List<ListaEsperaDTO>> getByPacienteEmail(@PathVariable String email) {
         try {
             return ResponseEntity.ok(listaService.getByPacienteEmail(email).stream()
-                .map(ListaEsperaDTO::from)
-                .toList());
+                    .map(ListaEsperaDTO::from)
+                    .toList());
         } catch (RuntimeException e) {
             return ResponseEntity.ok(List.of());
         }
@@ -59,14 +59,15 @@ public class ListaEsperaController {
                 request.getPaciente(),
                 request.getEspecialidad(),
                 request.getDiagnostico(),
-                request.getPerteneceGes()
-        );
+                request.getPerteneceGes());
         return ResponseEntity.ok(nueva);
     }
 
     @GetMapping("/especialidad/{especialidad}")
-    public ResponseEntity<List<ListaEspera>> obtenerPorEspecialidad(@PathVariable String especialidad) {
-        return ResponseEntity.ok(listaService.obtenerListasPorEspecialidad(especialidad));
+    public ResponseEntity<List<ListaEsperaDTO>> obtenerPorEspecialidad(@PathVariable String especialidad) {
+        return ResponseEntity.ok(listaService.obtenerListasPorEspecialidad(especialidad).stream()
+                .map(ListaEsperaDTO::from)
+                .toList());
     }
 
     @PutMapping("/{id}/estado")
