@@ -70,7 +70,7 @@ public class ListaEsperaService {
     }
 
     public List<ListaEspera> obtenerListasPorEspecialidad(String especialidad) {
-        return listaRepository.findByEspecialidadAndEstadoOrderByPrioridadAscFechaIngresoAsc(especialidad, EstadoLista.ESPERA);
+        return listaRepository.findByEspecialidadAndEstado(especialidad, EstadoLista.ESPERA);
     }
 
     public ListaEspera updateEstado(Long id, EstadoLista estado) {
