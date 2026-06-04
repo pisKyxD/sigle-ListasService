@@ -71,8 +71,8 @@ public class ListaEsperaController {
     }
 
     @PutMapping("/{id}/estado")
-    public ResponseEntity<ListaEspera> updateEstado(@PathVariable Long id, @RequestParam EstadoLista estado) {
-        return ResponseEntity.ok(listaService.updateEstado(id, estado));
+    public ResponseEntity<ListaEsperaDTO> updateEstado(@PathVariable Long id, @RequestParam EstadoLista estado) {
+        return ResponseEntity.ok(ListaEsperaDTO.from(listaService.updateEstado(id, estado)));
     }
 
     @DeleteMapping("/{id}")
