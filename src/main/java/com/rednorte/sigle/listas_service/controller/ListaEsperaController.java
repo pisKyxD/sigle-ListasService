@@ -11,10 +11,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/listas")
@@ -30,6 +34,19 @@ public class ListaEsperaController {
                 .toList());
     }
 
+    @GetMapping("/paginado")
+    public ResponseEntity<Map<String, Object>> getAllPaginado(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<ListaEspera> resultado = listaService.getAllPaginado(PageRequest.of(page, size));
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", resultado.getContent().stream().map(ListaEsperaDTO::from).toList());
+        response.put("totalPages", resultado.getTotalPages());
+        response.put("totalElements", resultado.getTotalElements());
+        response.put("currentPage", resultado.getNumber());
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ListaEsperaDTO> getById(@PathVariable Long id) {
         return ResponseEntity.ok(ListaEsperaDTO.from(listaService.getById(id)));
@@ -40,6 +57,20 @@ public class ListaEsperaController {
         return ResponseEntity.ok(listaService.getByPacienteId(pacienteId).stream()
                 .map(ListaEsperaDTO::from)
                 .toList());
+    }
+
+    @GetMapping("/paciente/{pacienteId}/paginado")
+    public ResponseEntity<Map<String, Object>> getByPacienteIdPaginado(
+            @PathVariable Long pacienteId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Page<ListaEspera> resultado = listaService.getByPacienteIdPaginado(pacienteId, PageRequest.of(page, size));
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", resultado.getContent().stream().map(ListaEsperaDTO::from).toList());
+        response.put("totalPages", resultado.getTotalPages());
+        response.put("totalElements", resultado.getTotalElements());
+        response.put("currentPage", resultado.getNumber());
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/paciente/email/{email}")
