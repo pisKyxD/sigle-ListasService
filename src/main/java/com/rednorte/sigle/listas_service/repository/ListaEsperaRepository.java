@@ -1,5 +1,7 @@
 package com.rednorte.sigle.listas_service.repository;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +15,7 @@ import java.util.List;
 @Repository
 public interface ListaEsperaRepository extends JpaRepository<ListaEspera, Long> {
     List<ListaEspera> findByPacienteId(Long pacienteId);
+    Page<ListaEspera> findByPacienteId(Long pacienteId, Pageable pageable);
     List<ListaEspera> findByEstado(EstadoLista estado);
     List<ListaEspera> findByEspecialidad(String especialidad);
 

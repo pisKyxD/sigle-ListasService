@@ -9,6 +9,8 @@ import com.rednorte.sigle.listas_service.repository.PacienteRepository;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -30,6 +32,15 @@ public class ListaEsperaService {
         return List.of();
     }
 
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetAllPaginado")
+    public Page<ListaEspera> getAllPaginado(Pageable pageable) {
+        return listaRepository.findAll(pageable);
+    }
+
+    public Page<ListaEspera> fallbackGetAllPaginado(Pageable pageable, Exception e) {
+        return Page.empty();
+    }
+
     @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetById")
     public ListaEspera getById(Long id) {
         return listaRepository.findById(id).orElseThrow(() -> new RuntimeException("Registro en lista no encontrado"));
@@ -46,6 +57,15 @@ public class ListaEsperaService {
 
     public List<ListaEspera> fallbackGetByPacienteId(Long pacienteId, Exception e) {
         return List.of();
+    }
+
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetByPacienteIdPaginado")
+    public Page<ListaEspera> getByPacienteIdPaginado(Long pacienteId, Pageable pageable) {
+        return listaRepository.findByPacienteId(pacienteId, pageable);
+    }
+
+    public Page<ListaEspera> fallbackGetByPacienteIdPaginado(Long pacienteId, Pageable pageable, Exception e) {
+        return Page.empty();
     }
 
     @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetByPacienteEmail")
