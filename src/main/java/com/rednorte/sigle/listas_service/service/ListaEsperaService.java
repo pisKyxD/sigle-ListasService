@@ -125,13 +125,16 @@ public class ListaEsperaService {
     }
 
     @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackUpdateEstado")
-    public ListaEspera updateEstado(Long id, EstadoLista estado) {
+    public ListaEspera updateEstado(Long id, EstadoLista estado, String diagnostico) {
         ListaEspera existing = getById(id);
         existing.setEstado(estado);
+        if (diagnostico != null && !diagnostico.isBlank()) {
+            existing.setDiagnostico(diagnostico);
+        }
         return listaRepository.save(existing);
     }
 
-    public ListaEspera fallbackUpdateEstado(Long id, EstadoLista estado, Exception e) {
+    public ListaEspera fallbackUpdateEstado(Long id, EstadoLista estado, String diagnostico, Exception e) {
         throw new RuntimeException("No se puede actualizar el estado. Servicio no disponible temporalmente.");
     }
 
