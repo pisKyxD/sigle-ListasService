@@ -99,11 +99,30 @@ Al registrar, el servicio calcula la prioridad según estas reglas:
 
 `ESPERA` → `AGENDADO` → `ATENDIDO` / `CANCELADO`
 
+## Validaciones
+
+Los endpoints de creación/actualización validan el body con `@Valid` y anotaciones `@NotNull` / `@NotBlank` de Jakarta Validation.
+
 ## Patrones
 
 **Repository con derived query:** `findByEspecialidadAndEstadoOrderByPrioridadAscFechaIngresoAsc` genera el SQL automáticamente del nombre del método, ordenando primero por prioridad y luego por fecha de ingreso.
 
 **DTO:** `ListaEsperaDTO` evita problemas de serialización con las relaciones lazy de Hibernate. Usa un factory method estático `ListaEsperaDTO.from(lista)`.
+
+## Tests
+
+```bash
+mvn test
+```
+
+Incluye tests unitarios para `ListaEsperaService` y `PacienteService`, y tests de integración (`MockMvc`) para `ListaEsperaController` y `PacienteController`, usando H2 en memoria.
+
+### Tests con Docker
+
+```bash
+docker build -f Dockerfile.test -t listas-tests .
+docker run --rm listas-tests
+```
 
 ## Health
 
