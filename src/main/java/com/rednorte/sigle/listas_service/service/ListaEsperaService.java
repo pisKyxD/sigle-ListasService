@@ -7,7 +7,10 @@ import com.rednorte.sigle.listas_service.model.Prioridad;
 import com.rednorte.sigle.listas_service.repository.ListaEsperaRepository;
 import com.rednorte.sigle.listas_service.repository.PacienteRepository;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,20 +23,64 @@ public class ListaEsperaService {
     private final ListaEsperaRepository listaRepository;
     private final PacienteRepository pacienteRepository;
 
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetAll")
     public List<ListaEspera> getAll() {
         return listaRepository.findAll();
     }
 
+    public List<ListaEspera> fallbackGetAll(Exception e) {
+        return List.of();
+    }
+
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetAllPaginado")
+    public Page<ListaEspera> getAllPaginado(Pageable pageable) {
+        return listaRepository.findAll(pageable);
+    }
+
+    public Page<ListaEspera> fallbackGetAllPaginado(Pageable pageable, Exception e) {
+        return Page.empty();
+    }
+
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetById")
     public ListaEspera getById(Long id) {
         return listaRepository.findById(id).orElseThrow(() -> new RuntimeException("Registro en lista no encontrado"));
     }
 
+    public ListaEspera fallbackGetById(Long id, Exception e) {
+        throw new RuntimeException("Servicio de listas no disponible temporalmente");
+    }
+
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetByPacienteId")
     public List<ListaEspera> getByPacienteId(Long pacienteId) {
         return listaRepository.findByPacienteId(pacienteId);
     }
 
+    public List<ListaEspera> fallbackGetByPacienteId(Long pacienteId, Exception e) {
+        return List.of();
+    }
+
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetByPacienteIdPaginado")
+    public Page<ListaEspera> getByPacienteIdPaginado(Long pacienteId, Pageable pageable) {
+        return listaRepository.findByPacienteId(pacienteId, pageable);
+    }
+
+    public Page<ListaEspera> fallbackGetByPacienteIdPaginado(Long pacienteId, Pageable pageable, Exception e) {
+        return Page.empty();
+    }
+
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackGetByPacienteEmail")
+    public List<ListaEspera> getByPacienteEmail(String email) {
+        Paciente paciente = pacienteRepository.findByEmail(email)
+            .orElseThrow(() -> new RuntimeException("Paciente no encontrado"));
+        return listaRepository.findByPacienteId(paciente.getId());
+    }
+
+    public List<ListaEspera> fallbackGetByPacienteEmail(String email, Exception e) {
+        return List.of();
+    }
+
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackRegistrar")
     public ListaEspera registrarPacienteEnLista(Paciente paciente, String especialidad, String diagnostico, Boolean perteneceGes) {
-        // Guardar o actualizar paciente
         Paciente savedPaciente = pacienteRepository.findByRut(paciente.getRut())
                 .orElseGet(() -> pacienteRepository.save(paciente));
 
@@ -52,6 +99,10 @@ public class ListaEsperaService {
         return listaRepository.save(nuevaLista);
     }
 
+    public ListaEspera fallbackRegistrar(Paciente paciente, String especialidad, String diagnostico, Boolean perteneceGes, Exception e) {
+        throw new RuntimeException("No se puede registrar el paciente. Servicio no disponible temporalmente.");
+    }
+
     private Prioridad calcularPrioridad(String diagnostico, Boolean isGes) {
         if (isGes != null && isGes) {
             return Prioridad.ALTA;
@@ -64,14 +115,27 @@ public class ListaEsperaService {
         return Prioridad.BAJA;
     }
 
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackObtenerPorEspecialidad")
     public List<ListaEspera> obtenerListasPorEspecialidad(String especialidad) {
-        return listaRepository.findByEspecialidadAndEstadoOrderByPrioridadAscFechaIngresoAsc(especialidad, EstadoLista.ESPERA);
+        return listaRepository.findByEspecialidad(especialidad);
     }
 
-    public ListaEspera updateEstado(Long id, EstadoLista estado) {
+    public List<ListaEspera> fallbackObtenerPorEspecialidad(String especialidad, Exception e) {
+        return List.of();
+    }
+
+    @CircuitBreaker(name = "listasService", fallbackMethod = "fallbackUpdateEstado")
+    public ListaEspera updateEstado(Long id, EstadoLista estado, String diagnostico) {
         ListaEspera existing = getById(id);
         existing.setEstado(estado);
+        if (diagnostico != null && !diagnostico.isBlank()) {
+            existing.setDiagnostico(diagnostico);
+        }
         return listaRepository.save(existing);
+    }
+
+    public ListaEspera fallbackUpdateEstado(Long id, EstadoLista estado, String diagnostico, Exception e) {
+        throw new RuntimeException("No se puede actualizar el estado. Servicio no disponible temporalmente.");
     }
 
     public void delete(Long id) {
