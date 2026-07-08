@@ -1,6 +1,6 @@
 const { Eureka } = require('eureka-js-client');
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 10000;
 const EUREKA_HOST = process.env.EUREKA_HOST || 'localhost';
 const EUREKA_PORT = process.env.EUREKA_PORT || 8761;
 const INSTANCE_HOST = process.env.INSTANCE_HOST || 'localhost';
