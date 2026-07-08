@@ -103,6 +103,12 @@ const registrarPacienteEnLista = async (pacienteData, especialidad, diagnostico,
     perteneceGes: perteneceGes || false,
   });
 
+  // ListaEspera.create() no trae el paciente asociado (no hace falta un
+  // include acá porque ya lo tenemos en memoria, recién creado o encontrado
+  // por rut más arriba). Lo adjuntamos manualmente para que toDTO() pueda
+  // devolver el paciente completo — el Front lo necesita para agendar la cita.
+  lista.paciente = paciente;
+
   return toDTO(lista);
 };
 
