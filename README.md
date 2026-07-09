@@ -2,36 +2,46 @@
 
 Microservicio del sistema SIGLE que gestiona las listas de espera GES y los pacientes asociados.
 
+> Migrado desde Spring Boot (Java) a Node.js / Express / Sequelize.
+
 ## Stack
 
-- Java 17
-- Spring Boot 3.2.5
-- Spring Data JPA
-- MySQL
-- Lombok
+- Node.js 20
+- Express 5
+- express-validator
+- Sequelize + MySQL2
+- Eureka (registro de servicio)
+- Jest + Supertest (testing)
+- pnpm (gestor de paquetes)
 
 ## Requisitos
 
-- Java 17+
-- Maven 3.9+
+- Node.js 20+
+- pnpm (`npm install -g pnpm`)
 - MySQL corriendo
 
-La base de datos `sigle_listas` se crea automáticamente al iniciar.
+## Variables de entorno
 
-## Configuración
+Copiar `.env.example` a `.env`:
 
-```properties
-server.port=8081
-spring.datasource.url=jdbc:mysql://localhost:3306/sigle_listas?createDatabaseIfNotExist=true&serverTimezone=UTC
-spring.datasource.username=root
-spring.datasource.password=tu_password
+```env
+PORT=8081
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=sigle_listas
+DB_USER=root
+DB_PASSWORD=tu_password
+
+EUREKA_HOST=localhost
+EUREKA_PORT=8761
+INSTANCE_HOST=localhost
 ```
 
 ## Instalación
 
 ```bash
-mvn clean package -DskipTests
-java -jar target/listas-service-0.0.1-SNAPSHOT.jar
+pnpm install
+pnpm dev
 ```
 
 Disponible en `http://localhost:8081`
@@ -40,7 +50,7 @@ Disponible en `http://localhost:8081`
 
 ```bash
 docker build -t sigle-listas-service .
-docker run -p 8081:10000 sigle-listas-service
+docker run -p 8081:8081 sigle-listas-service
 ```
 
 ## Endpoints
@@ -49,24 +59,26 @@ docker run -p 8081:10000 sigle-listas-service
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/api/listas` | Todas las listas |
-| GET | `/api/listas/{id}` | Por ID |
-| GET | `/api/listas/paciente/{pacienteId}` | Listas de un paciente |
-| GET | `/api/listas/paciente/email/{email}` | Listas por email |
-| POST | `/api/listas/registrar` | Registrar paciente en lista |
-| GET | `/api/listas/especialidad/{especialidad}` | Por especialidad, ordenadas por prioridad |
-| PUT | `/api/listas/{id}/estado` | Actualizar estado |
-| DELETE | `/api/listas/{id}` | Eliminar |
+| GET | `/api/listas/paginado?page=&size=` | Todas, paginadas |
+| GET | `/api/listas/:id` | Por ID |
+| GET | `/api/listas/paciente/:pacienteId` | Listas de un paciente |
+| GET | `/api/listas/paciente/:pacienteId/paginado?page=&size=` | Listas de un paciente, paginadas |
+| GET | `/api/listas/paciente/email/:email` | Listas por email del paciente |
+| GET | `/api/listas/especialidad/:especialidad` | Por especialidad, ordenadas por prioridad |
+| POST | `/api/listas/registrar` | Registrar paciente en lista (crea al paciente si no existe) |
+| PUT | `/api/listas/:id/estado` | Actualizar estado |
+| DELETE | `/api/listas/:id` | Eliminar |
 
 ### Pacientes
 | Método | Ruta | Descripción |
 |---|---|---|
 | GET | `/api/listas/pacientes` | Todos |
-| GET | `/api/listas/pacientes/{id}` | Por ID |
-| GET | `/api/listas/pacientes/rut/{rut}` | Por RUT |
-| GET | `/api/listas/pacientes/email/{email}` | Por email |
+| GET | `/api/listas/pacientes/:id` | Por ID (usado por PacientesService para obtener el email al enviar correos) |
+| GET | `/api/listas/pacientes/rut/:rut` | Por RUT |
+| GET | `/api/listas/pacientes/email/:email` | Por email |
 | POST | `/api/listas/pacientes` | Crear |
-| PUT | `/api/listas/pacientes/{id}` | Actualizar |
-| DELETE | `/api/listas/pacientes/{id}` | Eliminar |
+| PUT | `/api/listas/pacientes/:id` | Actualizar |
+| DELETE | `/api/listas/pacientes/:id` | Eliminar |
 
 ## Ejemplo registro en lista
 
@@ -101,21 +113,20 @@ Al registrar, el servicio calcula la prioridad según estas reglas:
 
 ## Validaciones
 
-Los endpoints de creación/actualización validan el body con `@Valid` y anotaciones `@NotNull` / `@NotBlank` de Jakarta Validation.
+Los endpoints de creación/actualización validan el body con `express-validator`. Peticiones con datos faltantes o inválidos devuelven `400` con el detalle del campo.
 
-## Patrones
+## Consumido por otros servicios
 
-**Repository con derived query:** `findByEspecialidadAndEstadoOrderByPrioridadAscFechaIngresoAsc` genera el SQL automáticamente del nombre del método, ordenando primero por prioridad y luego por fecha de ingreso.
-
-**DTO:** `ListaEsperaDTO` evita problemas de serialización con las relaciones lazy de Hibernate. Usa un factory method estático `ListaEsperaDTO.from(lista)`.
+- **CitasService** llama a `/api/listas/pacientes/:id` y a este servicio en general al momento de agendar una cita (vía el flujo de derivación).
+- **PacientesService** llama a `/api/listas/pacientes/:id` para obtener el email del paciente antes de enviar una notificación por correo.
 
 ## Tests
 
 ```bash
-mvn test
+pnpm test
 ```
 
-Incluye tests unitarios para `ListaEsperaService` y `PacienteService`, y tests de integración (`MockMvc`) para `ListaEsperaController` y `PacienteController`, usando H2 en memoria.
+Corre con Jest + Supertest, usando mocks del modelo Sequelize (no requiere BD real).
 
 ### Tests con Docker
 
@@ -125,18 +136,24 @@ docker run --rm listas-tests
 ```
 
 ## Health
-
-```
 GET http://localhost:8081/actuator/health
-```
 
 ## Estructura
-
-```
-src/main/java/com/rednorte/sigle/listas_service/
-├── controller/
-├── dto/
-├── model/
-├── repository/
-└── service/
-```
+src/
+├── app.js
+├── index.js
+├── config/
+│   ├── database.js
+│   └── eureka.js
+├── controllers/
+│   ├── listaEsperaController.js
+│   └── pacienteController.js
+├── models/
+│   ├── ListaEspera.js
+│   └── Paciente.js
+├── routes/
+│   ├── listas.js
+│   └── pacientes.js
+└── services/
+├── listaEsperaService.js
+└── pacienteService.js
