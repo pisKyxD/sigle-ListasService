@@ -64,7 +64,22 @@ const remove = async (req, res, next) => {
   try { await service.remove(req.params.id); res.json({ message: 'Lista eliminada' }); } catch (e) { next(e); }
 };
 
+const claimCandidato = async (req, res, next) => {
+  try {
+    const { especialidad, excluirIds } = req.body;
+    if (!especialidad) return res.status(400).json({ error: 'especialidad es obligatoria' });
+    const candidato = await service.claimCandidato(especialidad, excluirIds || []);
+    if (!candidato) return res.status(404).json({ error: 'Sin candidatos disponibles para esa especialidad' });
+    res.json(candidato);
+  } catch (e) { next(e); }
+};
+
+const resolverOferta = async (req, res, next) => {
+  try { res.json(await service.resolverOferta(req.params.id, req.body.nuevoEstado)); } catch (e) { next(e); }
+};
+
 module.exports = {
   getAll, getAllPaginado, getById, getByPacienteId, getByPacienteIdPaginado,
   getByPacienteEmail, registrar, getByEspecialidad, updateEstado, remove,
+  claimCandidato, resolverOferta,
 };
