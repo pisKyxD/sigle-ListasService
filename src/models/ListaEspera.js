@@ -8,7 +8,8 @@ const ListaEspera = sequelize.define('ListaEspera', {
   diagnostico: { type: DataTypes.STRING },
   prioridad: { type: DataTypes.ENUM('ALTA', 'MEDIA', 'BAJA') },
   estado: {
-    type: DataTypes.ENUM('ESPERA', 'AGENDADO', 'ATENDIDO', 'CANCELADO'),
+
+    type: DataTypes.ENUM('ESPERA', 'OFRECIDO', 'AGENDADO', 'ATENDIDO', 'CANCELADO'),
     defaultValue: 'ESPERA'
   },
   fechaIngreso: { type: DataTypes.DATE, field: 'fecha_ingreso' },
